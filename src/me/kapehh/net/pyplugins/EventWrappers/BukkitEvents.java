@@ -1,8 +1,7 @@
-package me.kapehh.net.pyplugins.EventWrappers;
+package me.kapehh.net.pyplugins.eventwrappers;
 
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
-import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
 import org.bukkit.event.hanging.*;
@@ -22,7 +21,7 @@ import org.bukkit.event.world.*;
 public class BukkitEvents implements Listener {
 
     private void fireEvent(Event event) {
-
+        System.out.println(event.getClass());
     }
 
     @EventHandler

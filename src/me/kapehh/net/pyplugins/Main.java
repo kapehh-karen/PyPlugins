@@ -1,6 +1,7 @@
 package me.kapehh.net.pyplugins;
 
-import me.kapehh.net.pyplugins.EventWrappers.BukkitEvents;
+import me.kapehh.net.pyplugins.core.PyPluginCore;
+import me.kapehh.net.pyplugins.eventwrappers.BukkitEvents;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,6 +24,14 @@ public class Main extends JavaPlugin {
         log.info("Loading PyPlugins...");
 
         pythonInterpreter = new PythonInterpreter();
+        pythonInterpreter.set("PyPluginsInstance", this);
+
+        PyPluginCore pyPluginCore = new PyPluginCore();
+        pythonInterpreter.set("PyPlugin", pyPluginCore);
+
+        log.info("Execute init.py for <PyPlugin>");
+        pythonInterpreter.execfile(Main.class.getResourceAsStream("/init.py"));
+        log.info("[+] Successful executed init.py");
 
         // Чекаем PyПлагины
         if (!getDataFolder().exists())
@@ -36,6 +45,7 @@ public class Main extends JavaPlugin {
                     continue;
                 }
                 try {
+                    //pythonInterpreter.exec(new PyFileReader(new FileReader(pyMain)));
                     pythonInterpreter.execfile(new FileInputStream(pyMain));
                     log.info("[+] Successful loaded PyPlugin: " + file.getName());
                 } catch (FileNotFoundException e) {
@@ -45,7 +55,7 @@ public class Main extends JavaPlugin {
         }
 
         // Регистрируем все Bukkit события
-        getServer().getPluginManager().registerEvents(new BukkitEvents(), this);
+        //getServer().getPluginManager().registerEvents(new BukkitEvents(), this);
     }
 
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
