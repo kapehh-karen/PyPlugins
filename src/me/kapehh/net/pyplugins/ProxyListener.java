@@ -22,10 +22,12 @@ import org.bukkit.event.world.*;
 public class ProxyListener implements Listener {
 
     private void fireEvent(Event event) {
+        if (!(event instanceof PlayerEvent) || event instanceof PlayerMoveEvent)
+            return;
         System.out.println("Raized event: " + event.getEventName());
     }
 
-    /*@EventHandler
+    @EventHandler
     public void onBlockBreakEvent(BlockBreakEvent event) { fireEvent(event); }
     @EventHandler
     public void onBlockBurnEvent(BlockBurnEvent event) { fireEvent(event); }
@@ -51,8 +53,6 @@ public class ProxyListener implements Listener {
     public void onBlockMultiPlaceEvent(BlockMultiPlaceEvent event) { fireEvent(event); }
     @EventHandler
     public void onBlockPhysicsEvent(BlockPhysicsEvent event) { fireEvent(event); }
-    @EventHandler
-    public void onBlockPistonEvent(BlockPistonEvent event) { fireEvent(event); }
     @EventHandler
     public void onBlockPistonExtendEvent(BlockPistonExtendEvent event) { fireEvent(event); }
     @EventHandler
@@ -190,8 +190,6 @@ public class ProxyListener implements Listener {
     @EventHandler
     public void onPrepareItemCraftEvent(PrepareItemCraftEvent event) { fireEvent(event); }
     @EventHandler
-    public void onPaintingBreakByEntityEvent(PaintingBreakByEntityEvent event) { fireEvent(event); }
-    @EventHandler
     public void onPaintingBreakEvent(PaintingBreakEvent event) { fireEvent(event); }
     @EventHandler
     public void onPaintingPlaceEvent(PaintingPlaceEvent event) { fireEvent(event); }
@@ -209,8 +207,6 @@ public class ProxyListener implements Listener {
     public void onPlayerBedLeaveEvent(PlayerBedLeaveEvent event) { fireEvent(event); }
     @EventHandler
     public void onPlayerBucketEmptyEvent(PlayerBucketEmptyEvent event) { fireEvent(event); }
-    @EventHandler
-    public void onPlayerBucketEvent(PlayerBucketEvent event) { fireEvent(event); }
     @EventHandler
     public void onPlayerBucketFillEvent(PlayerBucketFillEvent event) { fireEvent(event); }
     @EventHandler
@@ -294,23 +290,17 @@ public class ProxyListener implements Listener {
     @EventHandler
     public void onPluginEnableEvent(PluginEnableEvent event) { fireEvent(event); }
     @EventHandler
-    public void onPluginEvent(PluginEvent event) { fireEvent(event); }
-    @EventHandler
     public void onRemoteServerCommandEvent(RemoteServerCommandEvent event) { fireEvent(event); }
     @EventHandler
     public void onServerCommandEvent(ServerCommandEvent event) { fireEvent(event); }
     @EventHandler
     public void onServerListPingEvent(ServerListPingEvent event) { fireEvent(event); }
     @EventHandler
-    public void onServiceEvent(ServiceEvent event) { fireEvent(event); }
-    @EventHandler
     public void onServiceRegisterEvent(ServiceRegisterEvent event) { fireEvent(event); }
     @EventHandler
     public void onServiceUnregisterEvent(ServiceUnregisterEvent event) { fireEvent(event); }
     @EventHandler
     public void onVehicleBlockCollisionEvent(VehicleBlockCollisionEvent event) { fireEvent(event); }
-    @EventHandler
-    public void onVehicleCollisionEvent(VehicleCollisionEvent event) { fireEvent(event); }
     @EventHandler
     public void onVehicleCreateEvent(VehicleCreateEvent event) { fireEvent(event); }
     @EventHandler
@@ -334,10 +324,6 @@ public class ProxyListener implements Listener {
     @EventHandler
     public void onWeatherChangeEvent(WeatherChangeEvent event) { fireEvent(event); }
     @EventHandler
-    public void onWeatherEvent(WeatherEvent event) { fireEvent(event); }
-    @EventHandler
-    public void onChunkEvent(ChunkEvent event) { fireEvent(event); }
-    @EventHandler
     public void onChunkLoadEvent(ChunkLoadEvent event) { fireEvent(event); }
     @EventHandler
     public void onChunkPopulateEvent(ChunkPopulateEvent event) { fireEvent(event); }
@@ -356,5 +342,5 @@ public class ProxyListener implements Listener {
     @EventHandler
     public void onWorldSaveEvent(WorldSaveEvent event) { fireEvent(event); }
     @EventHandler
-    public void onWorldUnloadEvent(WorldUnloadEvent event) { fireEvent(event); }*/
+    public void onWorldUnloadEvent(WorldUnloadEvent event) { fireEvent(event); }
 }
