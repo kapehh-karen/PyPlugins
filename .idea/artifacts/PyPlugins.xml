@@ -1,0 +1,9 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="PyPlugins">
+    <output-path>$PROJECT_DIR$/out/artifacts/PyPlugins</output-path>
+    <root id="archive" name="PyPlugins.jar">
+      <element id="module-output" name="PyPlugins" />
+      <element id="file-copy" path="$PROJECT_DIR$/plugin.yml" />
+    </root>
+  </artifact>
+</component>
