@@ -2,3 +2,8 @@ name: PyPlugins
 main: me.kapehh.net.pyplugins.Main
 author: kapehh
 version: 1.0.0
+description: "Develop features on Python [by kapehh]"
+commands:
+  pyplugins:
+    description: "Manage PyPlugins"
+    usage: "/<command> (load/unload/reload) <pyginName>"
