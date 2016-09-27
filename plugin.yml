@@ -6,4 +6,10 @@ description: "Develop features on Python [by kapehh]"
 commands:
   pyplugins:
     description: "Manage PyPlugins"
-    usage: "/<command> (load/unload/reload) <pyginName>"
+    usage: |
+      Usage:
+      /<command> load <PyPluginName> - load PyPlugin
+      /<command> reload <PyPluginName> - reload PyPlugin
+      /<command> unload <PyPluginName> - unload PyPlugin
+      /<command> thread-list <ThreadName> - list of thread in group 'jython-threads'
+      /<command> thread-interrupt <ThreadName> - list of thread in group 'jython-threads'
