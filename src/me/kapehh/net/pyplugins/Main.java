@@ -1,6 +1,7 @@
 package me.kapehh.net.pyplugins;
 
 import me.kapehh.net.pyplugins.core.PyPluginInstance;
+import me.kapehh.net.pyplugins.eventwrappers.BukkitEvents;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -36,6 +37,10 @@ public class Main extends JavaPlugin {
             }
         }
         return threads;
+    }
+
+    public List<PyPluginInstance> getPyPluginInstances() {
+        return pyPluginInstances;
     }
 
     private PyPluginInstance getLoadedPyPlugin(String name) {
@@ -156,7 +161,7 @@ public class Main extends JavaPlugin {
         }
 
         // Регистрируем все Bukkit события
-        //getServer().getPluginManager().registerEvents(new BukkitEvents(), this);
+        getServer().getPluginManager().registerEvents(new BukkitEvents(this), this);
     }
 
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {

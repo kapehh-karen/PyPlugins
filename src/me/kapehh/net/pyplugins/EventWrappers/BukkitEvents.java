@@ -1,5 +1,7 @@
 package me.kapehh.net.pyplugins.eventwrappers;
 
+import me.kapehh.net.pyplugins.Main;
+import me.kapehh.net.pyplugins.core.PyPluginInstance;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -20,9 +22,17 @@ import org.bukkit.event.world.*;
  * Created by karen on 26.09.2016.
  */
 public class BukkitEvents implements Listener {
+    private Main main;
+
+    public BukkitEvents(Main main) {
+        this.main = main;
+    }
 
     private void fireEvent(Event event) {
-        System.out.println(event.getClass());
+        // Вызываем во всех плагинах событие, если оно конечно обрабатывается плагином
+        for (PyPluginInstance pluginInstance : main.getPyPluginInstances())
+            if (pluginInstance.getBukkitListener() != null)
+                pluginInstance.getBukkitListener().fireEvent(event);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
