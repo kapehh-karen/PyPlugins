@@ -8,6 +8,7 @@ commands:
     description: "Manage PyPlugins"
     usage: |
       Usage:
+      /<command> - list loaded PyPlugin's
       /<command> load <PyPluginName> - load PyPlugin
       /<command> reload <PyPluginName> - reload PyPlugin
       /<command> unload <PyPluginName> - unload PyPlugin

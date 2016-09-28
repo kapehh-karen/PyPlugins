@@ -1,7 +1,7 @@
-package me.kapehh.net.pyplugins.core;
+package me.kapehh.net.pyplugins.core.python;
 
+import me.kapehh.net.pyplugins.core.python.PyEventHandler;
 import org.bukkit.event.Event;
-import org.python.core.Py;
 import org.python.core.PyObject;
 
 import java.util.HashMap;
@@ -19,6 +19,11 @@ public class PyListenerBase {
     }*/
 
     public void addHandler(PyObject handler, Class<? extends Event> type, int priority) {
+        // Если это не функция (метод) то выходим
+        // Но об этом никому не скажем, хе-хе-хе-хе-хе
+        if (!handler.isCallable())
+            return;
+
         Set<PyEventHandler> set = this.handlers.get(type);
         PyEventHandler pythonHandler = new PyEventHandler(handler, type, priority);
 

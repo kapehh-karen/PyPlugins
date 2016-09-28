@@ -1,4 +1,4 @@
-package me.kapehh.net.pyplugins.core;
+package me.kapehh.net.pyplugins.core.python;
 
 import org.bukkit.event.Event;
 import org.python.core.PyObject;

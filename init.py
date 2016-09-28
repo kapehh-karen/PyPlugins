@@ -1,4 +1,5 @@
-from me.kapehh.net.pyplugins.core import PyListenerBase
+from me.kapehh.net.pyplugins.core.python import PyListenerBase
+from me.kapehh.net.pyplugins.core.python import PyPlugin
 
 def PyEventHandler(event, priority=0):
     def first_wrapper(method):
