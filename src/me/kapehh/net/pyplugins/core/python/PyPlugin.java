@@ -8,7 +8,17 @@ import org.bukkit.command.CommandSender;
  */
 public class PyPlugin {
     // Python override
-    public void onEnable() { /* NotImplemented */ }
-    public void onDisable() { /* NotImplemented */ }
-    public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) { /* NotImplemented */ return false; }
+
+    public void onEnable() {
+        /* NotImplemented */
+    }
+
+    public void onDisable() {
+        /* NotImplemented */
+    }
+
+    public boolean onCommand(CommandSender sender, String pyCommand, String[] args) {
+        /* NotImplemented */
+        return false;
+    }
 }

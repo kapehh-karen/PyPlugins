@@ -1,5 +1,6 @@
 package me.kapehh.net.pyplugins;
 
+import me.kapehh.net.pyplugins.core.PyCommandExecutor;
 import me.kapehh.net.pyplugins.core.PyPluginInstance;
 import me.kapehh.net.pyplugins.eventwrappers.BukkitEvents;
 import org.bukkit.command.Command;
@@ -147,7 +148,10 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        // TODO: Первый плагин будет загружаться долго
+
         Logger log = getLogger();
+        int loadedPyPlugins = 0;
         log.info("Loading PyPlugins...");
 
         // Чекаем PyПлагины
@@ -156,22 +160,38 @@ public class Main extends JavaPlugin {
 
         for (File file : getDataFolder().listFiles()) {
             if (file.isDirectory()) {
-                loadPyPlugin(file);
+                // Если плагин был загружен, увеличиваем счетчик
+                if (loadPyPlugin(file))
+                    loadedPyPlugins++;
             }
         }
 
+        // Если плагины небыли загружены,
+        // значит требуется просто инициализировать библиотеку jython (т.к. размер у неё достаточно большой)
+        // это делается для того, чтобы в дальнейшем (во время работы сервера) не зависал сервер
+        if (loadedPyPlugins <= 0) {
+            PythonInterpreter pythonInterpreter = new PythonInterpreter();
+            pythonInterpreter.cleanup();
+            pythonInterpreter.close();
+        }
+
+        log.info("Loaded " + loadedPyPlugins + " PyPlugins.");
+
         // Регистрируем все Bukkit события
         getServer().getPluginManager().registerEvents(new BukkitEvents(this), this);
+
+        // Регистрируем команды
+        getCommand("pyplugins").setExecutor(this);
+        getCommand("pycommand").setExecutor(new PyCommandExecutor(this));
     }
 
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
-        System.out.println("Trying execute command: " + cmd.getName());
-
-        if (!sender.isOp()) {
-            sender.sendMessage("Always for OP!");
-            return true;
-        }
         if (cmd.getName().equalsIgnoreCase("pyplugins")) {
+            if (!sender.isOp()) {
+                sender.sendMessage("Always for OP!");
+                return true;
+            }
+
             if (args.length < 2) {
                 return false;
             }
@@ -182,8 +202,8 @@ public class Main extends JavaPlugin {
             if (actionName.equalsIgnoreCase("reload")) {
                 // Может зависнуть если есть поток не являющийся демоном, лучше предварительно убить этот поток
                 // Делаем туды-сюды
-                if (unloadPyPlugin(actionArg)) // Выгрузили (туды)
-                    loadPyPlugin(actionArg); // Загрузили (сюды)
+                unloadPyPlugin(actionArg); // Выгрузили (туды)
+                loadPyPlugin(actionArg); // Загрузили (сюды)
                 return true;
             } else if (actionName.equalsIgnoreCase("load")) {
                 loadPyPlugin(actionArg);
@@ -193,6 +213,7 @@ public class Main extends JavaPlugin {
                 return true;
             }
         }
+
         return false;
     }
 

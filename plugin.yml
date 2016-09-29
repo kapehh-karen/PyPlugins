@@ -5,6 +5,7 @@ version: 1.0.0
 description: "Develop features on Python [by kapehh]"
 commands:
   pyplugins:
+    aliases: [pyp]
     description: "Manage PyPlugins"
     usage: |
       Usage:
@@ -14,3 +15,7 @@ commands:
       /<command> unload <PyPluginName> - unload PyPlugin
       /<command> thread-list <ThreadName> - list of thread in group 'jython-threads'
       /<command> thread-interrupt <ThreadName> - list of thread in group 'jython-threads'
+  pycommand:
+    aliases: [pyc]
+    description: "PyPlugin commands"
+    usage: "Usage: /<command> <cmd> [args]"
