@@ -23,11 +23,16 @@ public class PyCommandExecutor implements CommandExecutor {
 
         boolean ret = false;
         // Вызываем во всех плагинах событие ввода команды
-        for (PyPluginInstance pluginInstance : main.getPyPluginInstances())
-            if (pluginInstance.getPyPlugin() != null)
-                // Передаем PyCommand в плагины (т.е. первый аргумент args[0])
-                // Если хотя бы один из плагинов обработал команду, возвращаем true
-                ret |= pluginInstance.getPyPlugin().onCommand(sender, args[0], args);
+        for (PyPluginInstance pluginInstance : main.getPyPluginInstances()) {
+            try {
+                if (pluginInstance.getPyPlugin() != null)
+                    // Передаем PyCommand в плагины (т.е. первый аргумент args[0])
+                    // Если хотя бы один из плагинов обработал команду, возвращаем true
+                    ret |= pluginInstance.getPyPlugin().onCommand(sender, args[0], args);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
         return ret;
     }
 }
