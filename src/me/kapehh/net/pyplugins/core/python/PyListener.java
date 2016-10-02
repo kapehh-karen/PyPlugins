@@ -1,6 +1,9 @@
 package me.kapehh.net.pyplugins.core.python;
 
+import me.kapehh.net.pyplugins.Main;
 import org.bukkit.event.Event;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.python.core.Py;
 import org.python.core.PyObject;
 
@@ -11,24 +14,11 @@ import java.util.Set;
 /**
  * Created by karen on 26.09.2016.
  */
-public class PyListenerBase {
+public class PyListener implements Listener {
+    // TODO: Maybe remove?
     private HashMap<Class<? extends Event>, Set<PyEventHandler>> handlers = new HashMap<>();
 
-    public void fireEvent(Event e) {
-        Set<PyEventHandler> set = this.handlers.get(e.getClass());
-        if (set == null) return;
-
-        // Для каждого обработчика текущего события, вызываем его
-        for (PyEventHandler handler : set) {
-            try {
-                handler.getHandler().__call__(Py.java2py(e));
-            } catch (Exception ex) {
-                ex.printStackTrace();
-            }
-        }
-    }
-
-    public void addHandler(PyObject handler, Class<? extends Event> type, int priority) {
+    public void addHandler(PyObject handler, Class<? extends Event> type, EventPriority priority) {
         // Если это не функция (метод) то выходим
         // Но об этом никому не скажем, хе-хе-хе-хе-хе
         if (!handler.isCallable())
@@ -39,9 +29,12 @@ public class PyListenerBase {
 
         if(set == null) {
             set = new HashSet<>();
-            handlers.put(type, set);
+            this.handlers.put(type, set);
         }
 
+        // Добавляем EventHandler в список и регистрируем его
         set.add(pythonHandler);
+        if (Main.instance != null)
+            Main.instance.getServer().getPluginManager().registerEvent(type, this, priority, pythonHandler, Main.instance);
     }
 }

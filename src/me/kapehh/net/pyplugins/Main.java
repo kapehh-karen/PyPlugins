@@ -2,7 +2,6 @@ package me.kapehh.net.pyplugins;
 
 import me.kapehh.net.pyplugins.core.PyCommandExecutor;
 import me.kapehh.net.pyplugins.core.PyPluginInstance;
-import me.kapehh.net.pyplugins.eventwrappers.BukkitEvents;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -18,6 +17,7 @@ import java.util.logging.Logger;
  * Created by karen on 26.09.2016.
  */
 public class Main extends JavaPlugin {
+    public static Main instance = null;
     private List<PyPluginInstance> pyPluginInstances = new ArrayList<>();
 
     // --------------------------------------------------------------------------
@@ -92,10 +92,10 @@ public class Main extends JavaPlugin {
         pythonInterpreter.getSystemState().setCurrentWorkingDir(filePyPlugin.getAbsolutePath());
 
         // Создаем общий объект плагина
-        PyPluginInstance pyPluginInstance = new PyPluginInstance(this, filePyPlugin.getName(), pythonInterpreter);
+        PyPluginInstance pyPluginInstance = new PyPluginInstance(filePyPlugin.getName(), pythonInterpreter);
 
         // Передаем его в Python скрипт
-        pythonInterpreter.set("PyCurrentPluginInstance", pyPluginInstance);
+        pythonInterpreter.set("__pyplugin__", pyPluginInstance);
 
         File pyMain = new File(filePyPlugin, "main.py");
         if (!pyMain.exists()) {
@@ -168,6 +168,8 @@ public class Main extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        instance = this;
+
         Logger log = getLogger();
         int loadedPyPlugins = 0;
         log.info("Loading PyPlugins...");
@@ -194,9 +196,6 @@ public class Main extends JavaPlugin {
         }
 
         log.info("Loaded " + loadedPyPlugins + " PyPlugins.");
-
-        // Регистрируем все Bukkit события
-        getServer().getPluginManager().registerEvents(new BukkitEvents(this), this);
 
         // Регистрируем команды
         getCommand("pyplugins").setExecutor(this);
@@ -269,6 +268,8 @@ public class Main extends JavaPlugin {
         while (this.pyPluginInstances.size() > 0) {
             unloadPyPlugin(this.pyPluginInstances.get(0));
         }
+
+        instance = null;
     }
 
 }

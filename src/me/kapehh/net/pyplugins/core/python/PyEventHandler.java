@@ -1,17 +1,22 @@
 package me.kapehh.net.pyplugins.core.python;
 
 import org.bukkit.event.Event;
+import org.bukkit.event.EventException;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.plugin.EventExecutor;
+import org.python.core.Py;
 import org.python.core.PyObject;
 
 /**
  * Created by karen on 27.09.2016.
  */
-public class PyEventHandler {
+public class PyEventHandler implements EventExecutor {
     private PyObject handler;
     private Class<? extends Event> type;
-    private int priority;
+    private EventPriority priority;
 
-    public PyEventHandler(PyObject handler, Class<? extends Event> type, int priority) {
+    public PyEventHandler(PyObject handler, Class<? extends Event> type, EventPriority priority) {
         this.handler = handler;
         this.type = type;
         this.priority = priority;
@@ -33,20 +38,26 @@ public class PyEventHandler {
         this.type = type;
     }
 
-    public int getPriority() {
+    public EventPriority getPriority() {
         return priority;
     }
 
-    public void setPriority(int priority) {
+    public void setPriority(EventPriority priority) {
         this.priority = priority;
     }
 
     @Override
-    public String toString() {
-        return "PyEventHandler{" +
-                "handler=" + handler +
-                ", type=" + type +
-                ", priority=" + priority +
-                '}';
+    public void execute(Listener listener, Event event) throws EventException {
+        // По какой-то причине при прослушивании PlayerDeathEvent вызывался EntityDeathEvent
+        // такого быть не должно, по этому добавляем дополнительную проверку :)
+        if (!type.isInstance(event))
+            return;
+
+        // Вызываем событие и передаем в аргументы event
+        try {
+            this.handler.__call__(Py.java2py(event));
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
     }
 }

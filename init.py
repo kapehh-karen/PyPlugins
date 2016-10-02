@@ -1,7 +1,8 @@
-from me.kapehh.net.pyplugins.core.python import PyListenerBase
+from me.kapehh.net.pyplugins.core.python import PyListener
 from me.kapehh.net.pyplugins.core.python import PyPlugin
+from org.bukkit.event import EventPriority
 
-def PyEventHandler(event, priority=0):
+def PyEventHandler(event, priority=EventPriority.NORMAL):
     def first_wrapper(method):
         def second_wrapper(*args, **kwargs):
             method(*args, **kwargs)
@@ -10,9 +11,18 @@ def PyEventHandler(event, priority=0):
         return second_wrapper
     return first_wrapper
 
-class PyListener(PyListenerBase):
-    def __init__(self, *args, **kwargs):
-        for m in dir(self):
-            method = getattr(self, m)
-            if hasattr(method, '__PyEventType') and hasattr(method, '__PyEventPriority'):
-                self.addHandler(method, getattr(method, '__PyEventType'), getattr(method, '__PyEventPriority'))
+def BukkitListener(cls):
+    listener = cls()
+    for nameMethod in dir(listener):
+        method = getattr(listener, nameMethod)
+        if hasattr(method, '__PyEventType') and hasattr(method, '__PyEventPriority'):
+            listener.addHandler(method, getattr(method, '__PyEventType'), getattr(method, '__PyEventPriority'))
+    __pyplugin__.addPyListener(listener)
+    return cls
+
+def BukkitPlugin(cls):
+    if __pyplugin__.getPyPlugin() is not None:
+        raise Exception('PyPlugin already set')
+    else:
+        __pyplugin__.setPyPlugin(cls())
+    return cls

@@ -1,23 +1,24 @@
 package me.kapehh.net.pyplugins.core;
 
-import me.kapehh.net.pyplugins.Main;
-import me.kapehh.net.pyplugins.core.python.PyListenerBase;
+import me.kapehh.net.pyplugins.core.python.PyListener;
 import me.kapehh.net.pyplugins.core.python.PyPlugin;
+import org.bukkit.event.HandlerList;
 import org.python.core.PyObject;
 import org.python.util.PythonInterpreter;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by karen on 26.09.2016.
  */
 public class PyPluginInstance {
-    private Main main;
     private PythonInterpreter interpreter;
     private String name;
-    private PyListenerBase bukkitListener;
+    private List<PyListener> pyListeners = new ArrayList<>();
     private PyPlugin pyPlugin;
 
-    public PyPluginInstance(Main main, String name, PythonInterpreter interpreter) {
-        this.main = main;
+    public PyPluginInstance(String name, PythonInterpreter interpreter) {
         this.name = name;
         this.interpreter = interpreter;
     }
@@ -28,20 +29,22 @@ public class PyPluginInstance {
     }
 
     public void shutdown() {
-        interpreter.cleanup();
-        interpreter.close();
-        interpreter = null;
+        // Удаляем слушатели событий
+        for (PyListener pyListener : this.pyListeners)
+            HandlerList.unregisterAll(pyListener);
+        this.pyListeners.clear();
+
+        // Очищаем интерпретатор
+        this.interpreter.cleanup();
+        this.interpreter.close();
+        this.interpreter = null;
     }
 
     // ----------------------------------------------
 
-    // Слушатель событий Bukkit
-    public PyListenerBase getBukkitListener() {
-        return bukkitListener;
-    }
-
-    public void setBukkitListener(PyObject bukkitListener) {
-        this.bukkitListener = (PyListenerBase) bukkitListener.__tojava__(PyListenerBase.class);
+    // Слушатель событий
+    public void addPyListener(PyObject listener) {
+        this.pyListeners.add((PyListener) listener.__tojava__(PyListener.class));
     }
 
     // Экземпляр PyПлагина
