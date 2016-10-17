@@ -11,7 +11,18 @@ def PyEventHandler(event, priority=EventPriority.NORMAL):
         return second_wrapper
     return first_wrapper
 
+def PyCommandHandler(cmdName):
+    def first_wrapper(method):
+        def second_wrapper(*args, **kwargs):
+            method(*args, **kwargs)
+        second_wrapper.__PyCommandName = cmdName
+        return second_wrapper
+    return first_wrapper
+
 def BukkitListener(cls):
+    if not issubclass(cls, PyListener):
+        raise Exception('%s is not subclass PyListener' % cls)
+
     listener = cls()
     for nameMethod in dir(listener):
         method = getattr(listener, nameMethod)
@@ -21,8 +32,15 @@ def BukkitListener(cls):
     return cls
 
 def BukkitPlugin(cls):
+    if not issubclass(cls, PyPlugin):
+        raise Exception('%s is not subclass PyPlugin' % cls)
     if __pyplugin__.getPyPlugin() is not None:
         raise Exception('PyPlugin already set')
-    else:
-        __pyplugin__.setPyPlugin(cls())
+
+    pyplugin = cls()
+    for nameMethod in dir(pyplugin):
+        method = getattr(pyplugin, nameMethod)
+        if hasattr(method, '__PyCommandName'):
+            pyplugin.addCommand(getattr(method, '__PyCommandName'), method)
+    __pyplugin__.setPyPlugin(pyplugin)
     return cls

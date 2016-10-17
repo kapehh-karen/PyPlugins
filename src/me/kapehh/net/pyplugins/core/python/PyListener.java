@@ -15,10 +15,9 @@ import java.util.Set;
  * Created by karen on 26.09.2016.
  */
 public class PyListener implements Listener {
-    // TODO: Maybe remove?
-    private HashMap<Class<? extends Event>, Set<PyEventHandler>> handlers = new HashMap<>();
+    private final HashMap<Class<? extends Event>, Set<PyEventHandler>> handlers = new HashMap<>();
 
-    public void addHandler(PyObject handler, Class<? extends Event> type, EventPriority priority) {
+    public final void addHandler(PyObject handler, Class<? extends Event> type, EventPriority priority) {
         // Если это не функция (метод) то выходим
         // Но об этом никому не скажем, хе-хе-хе-хе-хе
         if (!handler.isCallable())
@@ -36,5 +35,12 @@ public class PyListener implements Listener {
         set.add(pythonHandler);
         if (Main.instance != null)
             Main.instance.getServer().getPluginManager().registerEvent(type, this, priority, pythonHandler, Main.instance);
+    }
+
+    @Override
+    public String toString() {
+        return "PyListener{" +
+                "handlers=" + handlers +
+                '}';
     }
 }
