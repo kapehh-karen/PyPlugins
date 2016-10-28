@@ -56,7 +56,7 @@ public class PyEventHandler implements EventExecutor {
         // Вызываем событие и передаем в аргументы event
         try {
             this.handler.__call__(Py.java2py(event));
-        } catch (Exception ex) {
+        } catch (Throwable ex) {
             ex.printStackTrace();
         }
     }

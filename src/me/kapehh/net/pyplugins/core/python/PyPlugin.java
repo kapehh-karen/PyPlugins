@@ -1,11 +1,7 @@
 package me.kapehh.net.pyplugins.core.python;
 
-import me.kapehh.net.pyplugins.Main;
-import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
-import org.bukkit.event.Event;
 import org.python.core.Py;
-import org.python.core.PyBoolean;
 import org.python.core.PyObject;
 
 import java.util.HashMap;
@@ -51,7 +47,7 @@ public class PyPlugin {
             // Вызываем метод
             try {
                 handler.__call__(Py.java2py(sender), Py.java2py(args));
-            } catch (Exception ex) {
+            } catch (Throwable ex) {
                 ex.printStackTrace();
             }
         }

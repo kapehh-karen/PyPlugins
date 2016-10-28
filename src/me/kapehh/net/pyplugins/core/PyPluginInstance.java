@@ -16,7 +16,7 @@ public class PyPluginInstance {
     private PythonInterpreter interpreter;
     private String name;
     private List<PyListener> pyListeners = new ArrayList<>();
-    private PyPlugin pyPlugin;
+    private PyPlugin pyPlugin = null;
 
     public PyPluginInstance(String name, PythonInterpreter interpreter) {
         this.name = name;
@@ -44,7 +44,9 @@ public class PyPluginInstance {
 
     // Слушатель событий
     public void addPyListener(PyObject listener) {
-        this.pyListeners.add((PyListener) listener.__tojava__(PyListener.class));
+        PyListener pyListener = (PyListener) listener.__tojava__(PyListener.class);
+        pyListener.setPyPlugin(this.pyPlugin);
+        this.pyListeners.add(pyListener);
     }
 
     // Экземпляр PyПлагина
@@ -54,5 +56,7 @@ public class PyPluginInstance {
 
     public void setPyPlugin(PyObject pyPlugin) {
         this.pyPlugin = (PyPlugin) pyPlugin.__tojava__(PyPlugin.class);
+        for (PyListener pyListener : pyListeners)
+            pyListener.setPyPlugin(this.pyPlugin);
     }
 }

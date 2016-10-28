@@ -1,10 +1,9 @@
 package me.kapehh.net.pyplugins.core.python;
 
-import me.kapehh.net.pyplugins.Main;
+import me.kapehh.net.pyplugins.PyPluginMain;
 import org.bukkit.event.Event;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.python.core.Py;
 import org.python.core.PyObject;
 
 import java.util.HashMap;
@@ -16,6 +15,15 @@ import java.util.Set;
  */
 public class PyListener implements Listener {
     private final HashMap<Class<? extends Event>, Set<PyEventHandler>> handlers = new HashMap<>();
+    private PyPlugin pyPlugin = null;
+
+    public PyPlugin getPyPlugin() {
+        return pyPlugin;
+    }
+
+    public void setPyPlugin(PyPlugin pyPlugin) {
+        this.pyPlugin = pyPlugin;
+    }
 
     public final void addHandler(PyObject handler, Class<? extends Event> type, EventPriority priority) {
         // Если это не функция (метод) то выходим
@@ -33,14 +41,7 @@ public class PyListener implements Listener {
 
         // Добавляем EventHandler в список и регистрируем его
         set.add(pythonHandler);
-        if (Main.instance != null)
-            Main.instance.getServer().getPluginManager().registerEvent(type, this, priority, pythonHandler, Main.instance);
-    }
-
-    @Override
-    public String toString() {
-        return "PyListener{" +
-                "handlers=" + handlers +
-                '}';
+        if (PyPluginMain.instance != null)
+            PyPluginMain.instance.getServer().getPluginManager().registerEvent(type, this, priority, pythonHandler, PyPluginMain.instance);
     }
 }

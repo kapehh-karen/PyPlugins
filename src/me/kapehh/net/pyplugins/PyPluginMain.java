@@ -7,6 +7,8 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.python.core.PyString;
+import org.python.core.PySystemState;
 import org.python.util.PythonInterpreter;
 
 import java.io.File;
@@ -17,14 +19,23 @@ import java.util.logging.Logger;
 /**
  * Created by karen on 26.09.2016.
  */
-public class Main extends JavaPlugin {
-    public static Main instance = null;
-    private List<PyPluginInstance> pyPluginInstances = new ArrayList<>();
+public class PyPluginMain extends JavaPlugin {
+    public static PyPluginMain instance = null;
+    private static List<PyPluginInstance> pyPluginInstances = new ArrayList<>();
 
     // --------------------------------------------------------------------------
 
-    public List<PyPluginInstance> getPyPluginInstances() {
+    public static List<PyPluginInstance> getPyPluginInstances() {
         return pyPluginInstances;
+    }
+
+    public static PyPluginInstance getLoadedPyPlugin(String name) {
+        for (PyPluginInstance p : pyPluginInstances) {
+            if (p.getName().equalsIgnoreCase(name)) {
+                return p;
+            }
+        }
+        return null;
     }
 
     private Thread getThreadByName(String threadName) {
@@ -56,15 +67,6 @@ public class Main extends JavaPlugin {
         return threads;
     }
 
-    private PyPluginInstance getLoadedPyPlugin(String name) {
-        for (PyPluginInstance p : this.pyPluginInstances) {
-            if (p.getName().equalsIgnoreCase(name)) {
-                return p;
-            }
-        }
-        return null;
-    }
-
     private boolean loadPyPlugin(String namePyPlugin, UniqueLog log) {
         return loadPyPlugin(new File(getDataFolder(), namePyPlugin), log);
     }
@@ -85,11 +87,14 @@ public class Main extends JavaPlugin {
             return false;
         }
 
-        // Создаем Python интерпретатор
-        PythonInterpreter pythonInterpreter = new PythonInterpreter();
+        // Меняем рабочую директорию на папку плагина
+        String pathToPyPlugin = filePyPlugin.getAbsolutePath();
+        PySystemState props = new PySystemState();
+        props.setCurrentWorkingDir(pathToPyPlugin);
+        props.path.append(new PyString(pathToPyPlugin));
 
-        // Меняем его рабочую директорию на папку плагина
-        pythonInterpreter.getSystemState().setCurrentWorkingDir(filePyPlugin.getAbsolutePath());
+        // Создаем Python интерпретатор
+        PythonInterpreter pythonInterpreter = new PythonInterpreter(null, props);
 
         // Создаем общий объект плагина
         PyPluginInstance pyPluginInstance = new PyPluginInstance(filePyPlugin.getName(), pythonInterpreter);
@@ -106,7 +111,7 @@ public class Main extends JavaPlugin {
         log.log("====== [Start execute: " + filePyPlugin.getName() + "] ======");
         try {
             // Выполняем скрипт инициализации
-            pythonInterpreter.execfile(Main.class.getResourceAsStream("/init.py"));
+            pythonInterpreter.execfile(PyPluginMain.class.getResourceAsStream("/init.py"));
             log.log("[+] Successful executed 'init.py' for " + filePyPlugin.getName());
 
             // Выполняем скрипт плагина
@@ -114,10 +119,10 @@ public class Main extends JavaPlugin {
             log.log("[+] Successful executed 'main.py' for " + filePyPlugin.getName());
 
             // Ну если уж главный скрипт выполнился, то добавляем в общий список
-            this.pyPluginInstances.add(pyPluginInstance);
+            pyPluginInstances.add(pyPluginInstance);
 
             ret = true;
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
             pyPluginInstance.shutdown(); // Просто подчищаем мусор после наших попыток что-то сделать
             ret = false;
@@ -130,7 +135,7 @@ public class Main extends JavaPlugin {
                 // Выполняем метод onEnable у плагина
                 if (pyPluginInstance.getPyPlugin() != null)
                     pyPluginInstance.getPyPlugin().onEnable();
-            } catch (Exception e) {
+            } catch (Throwable e) {
                 e.printStackTrace();
             }
         }
@@ -149,7 +154,7 @@ public class Main extends JavaPlugin {
             return false;
         }
 
-        log.log("Unloading PyPlugin: " + pyPluginInstance.getName());
+        log.log("[+] Unloading PyPlugin: " + pyPluginInstance.getName());
 
         try {
             // NOTE: Заключаем вызов метода onDisable в try-catch, чтобы ловить ошибки в python скрипте
@@ -157,14 +162,14 @@ public class Main extends JavaPlugin {
             // Предупреждаем его об этом, чтоб не шалил
             if (pyPluginInstance.getPyPlugin() != null)
                 pyPluginInstance.getPyPlugin().onDisable();
-        } catch (Exception e) {
+        } catch (Throwable e) {
             e.printStackTrace();
         }
 
         pyPluginInstance.shutdown();
-        this.pyPluginInstances.remove(pyPluginInstance);
+        pyPluginInstances.remove(pyPluginInstance);
 
-        log.log("Successful unload PyPlugin: " + pyPluginInstance.getName());
+        log.log("[+] Successful unload PyPlugin: " + pyPluginInstance.getName());
         return true;
     }
 
@@ -204,7 +209,7 @@ public class Main extends JavaPlugin {
 
         // Регистрируем команды
         getCommand("pyplugins").setExecutor(this);
-        getCommand("pycommand").setExecutor(new PyCommandExecutor(this));
+        getCommand("pycommand").setExecutor(new PyCommandExecutor());
     }
 
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
@@ -217,10 +222,10 @@ public class Main extends JavaPlugin {
 
             if (args.length == 0) {
                 // Команда /pyp
-                int cnt = this.pyPluginInstances.size();
+                int cnt = pyPluginInstances.size();
                 int i = 0;
                 StringBuilder sb = new StringBuilder("PyPlugins (").append(cnt).append("): ");
-                for (PyPluginInstance pluginInstance : this.pyPluginInstances) {
+                for (PyPluginInstance pluginInstance : pyPluginInstances) {
                     i++;
                     sb.append(ChatColor.GREEN).append(pluginInstance.getName()).append(ChatColor.RESET);
                     if (i < cnt) sb.append(", ");
@@ -272,8 +277,8 @@ public class Main extends JavaPlugin {
     @Override
     public void onDisable() {
         UniqueLog uniqueLog = new UniqueLog(getLogger());
-        while (this.pyPluginInstances.size() > 0) {
-            unloadPyPlugin(this.pyPluginInstances.get(0), uniqueLog);
+        while (pyPluginInstances.size() > 0) {
+            unloadPyPlugin(pyPluginInstances.get(0), uniqueLog);
         }
 
         instance = null;
