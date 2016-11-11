@@ -7,6 +7,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.python.core.PyString;
 import org.python.core.PySystemState;
 import org.python.util.PythonInterpreter;
@@ -73,16 +74,17 @@ public class PyPluginMain extends JavaPlugin {
 
     private boolean loadPyPlugin(File filePyPlugin, UniqueLog log) {
         boolean ret;
-        log.log("Loading PyPlugin: " + filePyPlugin.getName());
+        String pyPluginName = filePyPlugin.getName();
+        log.log("Loading PyPlugin: " + pyPluginName);
 
         // Если это не директория, то это и не плагин наверн
         if (!filePyPlugin.exists() || !filePyPlugin.isDirectory()) {
-            log.log("[-] File is not directory or not exists: " + filePyPlugin.getName());
+            log.log("[-] File is not directory or not exists: " + pyPluginName);
             return false;
         }
 
         // Если плагин уже загружен
-        if (getLoadedPyPlugin(filePyPlugin.getName()) != null) {
+        if (getLoadedPyPlugin(pyPluginName) != null) {
             log.log("[-] Plugin already loaded");
             return false;
         }
@@ -97,29 +99,30 @@ public class PyPluginMain extends JavaPlugin {
         PythonInterpreter pythonInterpreter = new PythonInterpreter(null, props);
 
         // Создаем общий объект плагина
-        PyPluginInstance pyPluginInstance = new PyPluginInstance(filePyPlugin.getName(), pythonInterpreter);
+        PyPluginInstance pyPluginInstance = new PyPluginInstance(pyPluginName, pythonInterpreter);
 
         // Передаем его в Python скрипт
         pythonInterpreter.set("__pyplugin__", pyPluginInstance);
 
         File pyMain = new File(filePyPlugin, "main.py");
         if (!pyMain.exists()) {
-            log.log("[-] File 'main.py' in '" + filePyPlugin.getName() + "' not found!");
+            log.log("[-] File 'main.py' in '" + pyPluginName + "' not found!");
             return false;
         }
 
-        log.log("====== [Start execute: " + filePyPlugin.getName() + "] ======");
+        log.log("====== [Start execute: " + pyPluginName + "] ======");
         try {
             // Выполняем скрипт инициализации
             pythonInterpreter.execfile(PyPluginMain.class.getResourceAsStream("/init.py"));
-            log.log("[+] Successful executed 'init.py' for " + filePyPlugin.getName());
+            log.log("[+] Successful executed 'init.py' for " + pyPluginName);
 
             // Выполняем скрипт плагина
-            pythonInterpreter.execfile(pyMain.getAbsolutePath() /*new FileInputStream(pyMain)*/);
-            log.log("[+] Successful executed 'main.py' for " + filePyPlugin.getName());
+            pythonInterpreter.execfile(pyMain.getAbsolutePath());
+            log.log("[+] Successful executed 'main.py' for " + pyPluginName);
 
             // Ну если уж главный скрипт выполнился, то добавляем в общий список
             pyPluginInstances.add(pyPluginInstance);
+            log.log("[+] Successful loaded: " + pyPluginName);
 
             ret = true;
         } catch (Throwable e) {
@@ -140,7 +143,7 @@ public class PyPluginMain extends JavaPlugin {
             }
         }
 
-        log.log("====== [Complete: " + filePyPlugin.getName() + "] ======");
+        log.log("====== [Complete: " + pyPluginName + "] ======");
         return ret;
     }
 
@@ -179,37 +182,43 @@ public class PyPluginMain extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
+        // Регистрируем команды
+        getCommand("pyplugins").setExecutor(this);
+        getCommand("pycommand").setExecutor(new PyCommandExecutor());
+
         Logger log = getLogger();
-        int loadedPyPlugins = 0;
-        log.info("Start loading PyPlugins...");
+        log.info("Start task loading PyPlugins...");
 
         // Чекаем PyПлагины
         if (!getDataFolder().exists())
             getDataFolder().mkdirs();
 
-        UniqueLog uniqueLog = new UniqueLog(log);
-        for (File file : getDataFolder().listFiles()) {
-            if (file.isDirectory()) {
-                // Если плагин был загружен, увеличиваем счетчик
-                if (loadPyPlugin(file, uniqueLog))
-                    loadedPyPlugins++;
+        // Запускаем Task через 1 тик, чтобы код выполнился после загрузки всех плагинов
+        new BukkitRunnable() {
+
+            @Override
+            public void run() {
+                int loadedPyPlugins = 0;
+
+                UniqueLog uniqueLog = new UniqueLog(log);
+                for (File file : getDataFolder().listFiles()) {
+                    if (file.isDirectory()) {
+                        // Если плагин был загружен, увеличиваем счетчик
+                        if (loadPyPlugin(file, uniqueLog))
+                            loadedPyPlugins++;
+                    }
+                }
+
+                // Если плагины небыли загружены,
+                // значит требуется просто инициализировать библиотеку jython (т.к. размер у неё достаточно большой)
+                // это делается для того, чтобы в дальнейшем (во время работы сервера) не зависал сервер
+                if (loadedPyPlugins <= 0) {
+                    PythonInterpreter pythonInterpreter = new PythonInterpreter();
+                    pythonInterpreter.cleanup();
+                    pythonInterpreter.close();
+                }
             }
-        }
-
-        // Если плагины небыли загружены,
-        // значит требуется просто инициализировать библиотеку jython (т.к. размер у неё достаточно большой)
-        // это делается для того, чтобы в дальнейшем (во время работы сервера) не зависал сервер
-        if (loadedPyPlugins <= 0) {
-            PythonInterpreter pythonInterpreter = new PythonInterpreter();
-            pythonInterpreter.cleanup();
-            pythonInterpreter.close();
-        }
-
-        log.info("Loaded " + loadedPyPlugins + " PyPlugins");
-
-        // Регистрируем команды
-        getCommand("pyplugins").setExecutor(this);
-        getCommand("pycommand").setExecutor(new PyCommandExecutor());
+        }.runTaskLater(this, 1);
     }
 
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
