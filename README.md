@@ -112,3 +112,24 @@ class Plug(PyPlugin):
 * <code>/pyp thread-list</code> - выводит список потоков которые были запущенны в python-скриптах
 * <code>/pyp thread-stop **threadName**</code> - завершает поток по его имени
 * <code>/pyc **commandName**</code> - выполняет команду **commandName**
+
+# Рекомендации
+
+Подключение python модулей лучше делать после подключения Java классов. Например:
+```python
+# -*- coding: utf-8 -*-
+
+from org.bukkit.entity import Player
+from org.bukkit.event.player import PlayerJoinEvent
+from org.bukkit.event.player import PlayerQuitEvent
+from org.bukkit.event.player import PlayerCommandPreprocessEvent
+from org.bukkit.event.entity import PlayerDeathEvent
+from org.bukkit import ChatColor
+from org.bukkit import Bukkit
+from me.kapehh.main.pluginmanager.vault import PluginVault
+
+import re
+
+
+# Code
+```
