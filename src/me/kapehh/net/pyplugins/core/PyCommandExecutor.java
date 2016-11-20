@@ -12,6 +12,10 @@ import java.util.Arrays;
  */
 public class PyCommandExecutor implements CommandExecutor {
 
+    /**
+     * Стандартный Bukkit-обработчик команд
+     * @see PyPluginMain#onEnable
+     */
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
         // Если ввели просто /pyc то досвидули, требуется /pyc PyCommand

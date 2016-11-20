@@ -11,20 +11,19 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Created by karen on 26.09.2016.
+ * Реализуем интерфейс Listener только для того, чтобы могли привязать к нему все PyEventHandler'ы
  */
 public class PyListener implements Listener {
     private final HashMap<Class<? extends Event>, Set<PyEventHandler>> handlers = new HashMap<>();
-    private PyPlugin pyPlugin = null;
 
-    public PyPlugin getPyPlugin() {
-        return pyPlugin;
-    }
-
-    public void setPyPlugin(PyPlugin pyPlugin) {
-        this.pyPlugin = pyPlugin;
-    }
-
+    /**
+     * Регистрирует BukkitEvent на сервере
+     * init.py
+     *
+     * @param handler метод который будет вызываться при срабатывании события
+     * @param type тип события
+     * @param priority приоритет события
+     */
     public final void addHandler(PyObject handler, Class<? extends Event> type, EventPriority priority) {
         // Если это не функция (метод) то выходим
         // Но об этом никому не скажем, хе-хе-хе-хе-хе
@@ -39,7 +38,7 @@ public class PyListener implements Listener {
             this.handlers.put(type, set);
         }
 
-        // Добавляем EventHandler в список и регистрируем его
+        // Добавляем EventHandler в список и регистрируем его на сервере
         set.add(pythonHandler);
         if (PyPluginMain.instance != null)
             PyPluginMain.instance.getServer().getPluginManager().registerEvent(type, this, priority, pythonHandler, PyPluginMain.instance);

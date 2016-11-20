@@ -28,8 +28,13 @@ public class PyPluginInstance {
         return name;
     }
 
+    // Экземпляр PyПлагина
+    public PyPlugin getPyPlugin() {
+        return pyPlugin;
+    }
+
     public void shutdown() {
-        // Удаляем слушатели событий
+        // Удаляем слушатели событий связанные с нашими PyListener'fvb
         for (PyListener pyListener : this.pyListeners)
             HandlerList.unregisterAll(pyListener);
         this.pyListeners.clear();
@@ -40,23 +45,28 @@ public class PyPluginInstance {
         this.interpreter = null;
     }
 
-    // ----------------------------------------------
+    /**
+     * PYPLUGIN PART
+     */
 
-    // Слушатель событий
+    /**
+     * Регистрирует все методы PyListener'а на сервере (каждый метод - отдельное событие)
+     * init.py
+     *
+     * @param listener класс отмеченный декоратором BukkitListener
+     */
     public void addPyListener(PyObject listener) {
         PyListener pyListener = (PyListener) listener.__tojava__(PyListener.class);
-        pyListener.setPyPlugin(this.pyPlugin);
         this.pyListeners.add(pyListener);
     }
 
-    // Экземпляр PyПлагина
-    public PyPlugin getPyPlugin() {
-        return pyPlugin;
-    }
-
+    /**
+     * Устанавливает экземпляр PyPlugin'а для данного py-плагина
+     * init.py
+     *
+     * @param pyPlugin класс отмеченный декоратором BukkitPlugin
+     */
     public void setPyPlugin(PyObject pyPlugin) {
         this.pyPlugin = (PyPlugin) pyPlugin.__tojava__(PyPlugin.class);
-        for (PyListener pyListener : pyListeners)
-            pyListener.setPyPlugin(this.pyPlugin);
     }
 }

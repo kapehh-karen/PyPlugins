@@ -9,7 +9,7 @@ import org.python.core.Py;
 import org.python.core.PyObject;
 
 /**
- * Created by karen on 27.09.2016.
+ * Реализуем интерфейс EventExecutor и вызываем метод из питона для обработки события
  */
 public class PyEventHandler implements EventExecutor {
     private PyObject handler;

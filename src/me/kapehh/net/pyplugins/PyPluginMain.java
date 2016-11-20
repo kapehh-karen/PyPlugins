@@ -24,7 +24,9 @@ public class PyPluginMain extends JavaPlugin {
     public static PyPluginMain instance = null;
     private static List<PyPluginInstance> pyPluginInstances = new ArrayList<>();
 
-    // --------------------------------------------------------------------------
+    /**
+     * STATIC PART
+     */
 
     public static List<PyPluginInstance> getPyPluginInstances() {
         return pyPluginInstances;
@@ -38,6 +40,13 @@ public class PyPluginMain extends JavaPlugin {
         }
         return null;
     }
+
+    /**
+     * INTERNAL PART
+     *
+     * - Jython Threads
+     * - PyPlugins
+     */
 
     private Thread getThreadByName(String threadName) {
         for (Thread thread : getRunningJythonThreads()) {
@@ -137,7 +146,7 @@ public class PyPluginMain extends JavaPlugin {
                 // NOTE: Заключаем вызов метода onEnable в try-catch, чтобы ловить ошибки в python скрипте
                 // Выполняем метод onEnable у плагина
                 if (pyPluginInstance.getPyPlugin() != null)
-                    pyPluginInstance.getPyPlugin().onEnable();
+                    pyPluginInstance.getPyPlugin().enable();
             } catch (Throwable e) {
                 e.printStackTrace();
             }
@@ -164,7 +173,7 @@ public class PyPluginMain extends JavaPlugin {
             // Вызываем метод onDisable у плагина (ну типа выгружаем его)
             // Предупреждаем его об этом, чтоб не шалил
             if (pyPluginInstance.getPyPlugin() != null)
-                pyPluginInstance.getPyPlugin().onDisable();
+                pyPluginInstance.getPyPlugin().disable();
         } catch (Throwable e) {
             e.printStackTrace();
         }
@@ -176,7 +185,13 @@ public class PyPluginMain extends JavaPlugin {
         return true;
     }
 
-    // --------------------------------------------------------------------------
+    /**
+     * BUKKIT PLUGIN PART
+     *
+     * - Enable
+     * - Disable
+     * - CommandExecute
+     */
 
     @Override
     public void onEnable() {

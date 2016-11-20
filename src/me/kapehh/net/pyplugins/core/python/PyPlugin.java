@@ -1,5 +1,6 @@
 package me.kapehh.net.pyplugins.core.python;
 
+import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.python.core.Py;
 import org.python.core.PyObject;
@@ -14,14 +15,29 @@ import java.util.Set;
 public class PyPlugin {
     private final HashMap<String, Set<PyObject>> handlers = new HashMap<>();
 
-    public void onEnable() {
+    /**
+     * Данный метод перезапишется в py-плагине своей реализацией
+     * init.py
+     */
+    public void enable() {
         /* NotImplemented */
     }
 
-    public void onDisable() {
+    /**
+     * Данный метод перезапишется в py-плагине своей реализацией
+     * init.py
+     */
+    public void disable() {
         /* NotImplemented */
     }
 
+    /**
+     * Данный метод вызывается в файле init.py при регистрации команд
+     * init.py
+     *
+     * @param pyCommand команда py-плагина
+     * @param handler объект питоновский, который будет вызываться для обработки команды
+     */
     public final void addCommand(String pyCommand, PyObject handler) {
         // Если это не функция (метод) то выходим
         if (!handler.isCallable())
@@ -38,6 +54,15 @@ public class PyPlugin {
         set.add(handler);
     }
 
+    /**
+     * Обработчик команды py-плагина
+     *
+     * @see me.kapehh.net.pyplugins.core.PyCommandExecutor#onCommand
+     * @param sender - игрок или консоль, которая вводит команду
+     * @param pyCommand - имя команды (/pyc pyCommand)
+     * @param args - аргументы команды (/pyc pyCommand [arg0 arg1 ...])
+     * @return возвращает true если программа была обработана плагином
+     */
     public final boolean executeCommand(CommandSender sender, String pyCommand, String[] args) {
         Set<PyObject> set = this.handlers.get(pyCommand);
         if ((set == null) || (set.size() < 1))
