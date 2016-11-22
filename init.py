@@ -3,14 +3,95 @@
 from me.kapehh.net.pyplugins.core.python import PyListener as JavaPyListener
 from me.kapehh.net.pyplugins.core.python import PyPlugin as JavaPyPlugin
 from org.bukkit.event import EventPriority
+from org.bukkit.entity import Player
+from org.bukkit.inventory import ItemStack
+from org.bukkit.util.io import BukkitObjectInputStream
+from org.bukkit.util.io import BukkitObjectOutputStream
+
+from java.io import ByteArrayInputStream
+from java.io import ByteArrayOutputStream
+
+import json
+import binascii
 
 
 # Settings init.py
+
+
+ITEMSTACK_JSON_NAME = "bukkit::itemstack"
+SESSIONS_DIR_NAME = "sessions"
+
 __internal_data__ = {
     "event_methods": [],
     "command_methods": [],
     "pyplugin": None
 }
+
+
+# Bukkit JSON
+
+
+class BukkitJSONEncoder(json.JSONEncoder):
+
+
+    def default(self, obj):
+
+        if not isinstance(obj, ItemStack):
+            return None
+
+        byte_array_out = ByteArrayOutputStream()
+        bukkit_out = BukkitObjectOutputStream(byte_array_out)
+        bukkit_out.writeObject(obj)
+        bukkit_out.flush()
+        bukkit_out.close()
+        raw_bytes = byte_array_out.toByteArray()
+
+        return {ITEMSTACK_JSON_NAME: binascii.hexlify(raw_bytes)}
+
+
+class BukkitJSONDecoder:
+
+
+    def from_json(self, json_object):
+
+        if not ITEMSTACK_JSON_NAME in json_object:
+            return json_object
+
+        raw_bytes = binascii.unhexlify(json_object[ITEMSTACK_JSON_NAME])
+        byte_array_in = ByteArrayInputStream(raw_bytes)
+        bukkit_in = BukkitObjectInputStream(byte_array_in)
+        bukkit_item = bukkit_in.readObject()
+        bukkit_in.close()
+
+        return bukkit_item
+
+
+    def decode(self, json_string):
+        return json.JSONDecoder(object_hook=self.from_json).decode(json_string)
+
+
+class BukkitJSON:
+    encoder = BukkitJSONEncoder()
+    decoder = BukkitJSONDecoder()
+
+
+# Sessions
+
+
+class PlayerSession:
+
+
+    @staticmethod
+    def get(player):
+
+        if not isinstance(player, Player):
+            raise Exception('Support only for <Player>')
+
+        # TODO
+        print "Get session for player: %s" % player.getName()
+
+
+# Internal classes
 
 
 class PyListener(JavaPyListener):
@@ -25,6 +106,9 @@ class PyListener(JavaPyListener):
 
 class PyPlugin(JavaPyPlugin):
     pass
+
+
+# Decorations
 
 
 def PyEventHandler(event, priority=EventPriority.NORMAL):
