@@ -98,17 +98,18 @@ public class PyPluginMain extends JavaPlugin {
             return false;
         }
 
-        // Меняем рабочую директорию на папку плагина
-        String pathToPyPlugin = filePyPlugin.getAbsolutePath();
-        PySystemState props = new PySystemState();
-        props.setCurrentWorkingDir(pathToPyPlugin);
-        props.path.append(new PyString(pathToPyPlugin));
-
-        // Создаем Python интерпретатор
-        PythonInterpreter pythonInterpreter = new PythonInterpreter(null, props);
+        // Создаем Python интерпретатор и добавляем нужные пути
+        PythonInterpreter pythonInterpreter = new PythonInterpreter();
+        PySystemState props = pythonInterpreter.getSystemState();
+        PyString bukkitPluginFolder = new PyString(this.getDataFolder().getAbsolutePath());
+        props.setCurrentWorkingDir(this.getDataFolder().getAbsolutePath()); // python plugin folder
+        // once add path to sys.path
+        if (!props.path.contains(bukkitPluginFolder)) {
+            props.path.append(bukkitPluginFolder);
+        }
 
         // Создаем общий объект плагина
-        PyPluginInstance pyPluginInstance = new PyPluginInstance(pyPluginName, pythonInterpreter);
+        PyPluginInstance pyPluginInstance = new PyPluginInstance(filePyPlugin, pythonInterpreter);
 
         // Передаем его в Python скрипт
         pythonInterpreter.set("__pyplugin__", pyPluginInstance);
