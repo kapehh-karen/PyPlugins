@@ -8,13 +8,8 @@ import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.python.core.PyString;
-import org.python.core.PySystemState;
-import org.python.util.PythonInterpreter;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -22,181 +17,11 @@ import java.util.logging.Logger;
  */
 public class PyPluginMain extends JavaPlugin {
     public static PyPluginMain instance = null;
-    private static List<PyPluginInstance> pyPluginInstances = new ArrayList<>();
-
-    /**
-     * STATIC PART
-     */
-
-    public static List<PyPluginInstance> getPyPluginInstances() {
-        return pyPluginInstances;
-    }
-
-    public static PyPluginInstance getLoadedPyPlugin(String name) {
-        for (PyPluginInstance p : pyPluginInstances) {
-            if (p.getName().equalsIgnoreCase(name)) {
-                return p;
-            }
-        }
-        return null;
-    }
-
-    /**
-     * INTERNAL PART
-     *
-     * - Jython Threads
-     * - PyPlugins
-     */
-
-    private Thread getThreadByName(String threadName) {
-        for (Thread thread : getRunningJythonThreads()) {
-            if (thread.getName().equalsIgnoreCase(threadName))
-                return thread;
-        }
-        return null;
-    }
-
-    private List<Thread> getRunningJythonThreads() {
-        return getRunningJythonThreads("jython-threads");
-    }
-
-    private List<Thread> getRunningJythonThreads(String groupName) {
-        List<Thread> threads = new ArrayList<>();
-        ThreadGroup threadGroup = Thread.currentThread().getThreadGroup();
-        ThreadGroup parent;
-        while ((parent = threadGroup.getParent()) != null) {
-            threadGroup = parent;
-            Thread[] threadList = new Thread[threadGroup.activeCount()];
-            threadGroup.enumerate(threadList);
-            for (Thread thread : threadList) {
-                if (thread.getThreadGroup().getName().equalsIgnoreCase(groupName)) {
-                    threads.add(thread);
-                }
-            }
-        }
-        return threads;
-    }
-
-    private boolean loadPyPlugin(String namePyPlugin, UniqueLog log) {
-        return loadPyPlugin(new File(getDataFolder(), namePyPlugin), log);
-    }
-
-    private boolean loadPyPlugin(File filePyPlugin, UniqueLog log) {
-        boolean ret;
-        String pyPluginName = filePyPlugin.getName();
-        log.log("Loading PyPlugin: " + pyPluginName);
-
-        // Если это не директория, то это и не плагин наверн
-        if (!filePyPlugin.exists() || !filePyPlugin.isDirectory()) {
-            log.log("[-] File is not directory or not exists: " + pyPluginName);
-            return false;
-        }
-
-        // Если плагин уже загружен
-        if (getLoadedPyPlugin(pyPluginName) != null) {
-            log.log("[-] Plugin already loaded");
-            return false;
-        }
-
-        // Создаем Python интерпретатор и добавляем нужные пути
-        PythonInterpreter pythonInterpreter = new PythonInterpreter();
-        PySystemState props = pythonInterpreter.getSystemState();
-        PyString bukkitPluginFolder = new PyString(this.getDataFolder().getAbsolutePath());
-        props.setCurrentWorkingDir(this.getDataFolder().getAbsolutePath()); // python plugin folder
-        // once add path to sys.path
-        if (!props.path.contains(bukkitPluginFolder)) {
-            props.path.append(bukkitPluginFolder);
-        }
-
-        // Создаем общий объект плагина
-        PyPluginInstance pyPluginInstance = new PyPluginInstance(filePyPlugin, pythonInterpreter);
-
-        // Передаем его в Python скрипт
-        pythonInterpreter.set("__pyplugin__", pyPluginInstance);
-
-        File pyMain = new File(filePyPlugin, "main.py");
-        if (!pyMain.exists()) {
-            log.log("[-] File 'main.py' in '" + pyPluginName + "' not found!");
-            return false;
-        }
-
-        log.log("====== [Start execute: " + pyPluginName + "] ======");
-        try {
-            // Выполняем скрипт инициализации
-            pythonInterpreter.execfile(PyPluginMain.class.getResourceAsStream("/init.py"));
-            log.log("[+] Successful executed 'init.py' for " + pyPluginName);
-
-            // Выполняем скрипт плагина
-            pythonInterpreter.execfile(pyMain.getAbsolutePath());
-            log.log("[+] Successful executed 'main.py' for " + pyPluginName);
-
-            // Ну если уж главный скрипт выполнился, то добавляем в общий список
-            pyPluginInstances.add(pyPluginInstance);
-            log.log("[+] Successful loaded: " + pyPluginName);
-
-            ret = true;
-        } catch (Throwable e) {
-            e.printStackTrace();
-            pyPluginInstance.shutdown(); // Просто подчищаем мусор после наших попыток что-то сделать
-            ret = false;
-        }
-
-        // Если все ок и небыло ошибок, тогда вызываем onEnable у плагина
-        if (ret) {
-            try {
-                // NOTE: Заключаем вызов метода onEnable в try-catch, чтобы ловить ошибки в python скрипте
-                // Выполняем метод onEnable у плагина
-                if (pyPluginInstance.getPyPlugin() != null)
-                    pyPluginInstance.getPyPlugin().enable();
-            } catch (Throwable e) {
-                e.printStackTrace();
-            }
-        }
-
-        log.log("====== [Complete: " + pyPluginName + "] ======");
-        return ret;
-    }
-
-    private boolean unloadPyPlugin(String namePyPlugin, UniqueLog log) {
-        return unloadPyPlugin(getLoadedPyPlugin(namePyPlugin), log);
-    }
-
-    private boolean unloadPyPlugin(PyPluginInstance pyPluginInstance, UniqueLog log) {
-        if (pyPluginInstance == null) {
-            log.log("[-] Not found PyPlugin");
-            return false;
-        }
-
-        log.log("[+] Unloading PyPlugin: " + pyPluginInstance.getName());
-
-        try {
-            // NOTE: Заключаем вызов метода onDisable в try-catch, чтобы ловить ошибки в python скрипте
-            // Вызываем метод onDisable у плагина (ну типа выгружаем его)
-            // Предупреждаем его об этом, чтоб не шалил
-            if (pyPluginInstance.getPyPlugin() != null)
-                pyPluginInstance.getPyPlugin().disable();
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-
-        pyPluginInstance.shutdown();
-        pyPluginInstances.remove(pyPluginInstance);
-
-        log.log("[+] Successful unload PyPlugin: " + pyPluginInstance.getName());
-        return true;
-    }
-
-    /**
-     * BUKKIT PLUGIN PART
-     *
-     * - Enable
-     * - Disable
-     * - CommandExecute
-     */
 
     @Override
     public void onEnable() {
         instance = this;
+        PyPluginManager.setDataFolder(this.getDataFolder());
 
         // Регистрируем команды
         getCommand("pyplugins").setExecutor(this);
@@ -220,7 +45,7 @@ public class PyPluginMain extends JavaPlugin {
                 for (File file : getDataFolder().listFiles()) {
                     if (file.isDirectory()) {
                         // Если плагин был загружен, увеличиваем счетчик
-                        if (loadPyPlugin(file, uniqueLog))
+                        if (PyPluginManager.loadPyPlugin(file, uniqueLog))
                             loadedPyPlugins++;
                     }
                 }
@@ -229,9 +54,7 @@ public class PyPluginMain extends JavaPlugin {
                 // значит требуется просто инициализировать библиотеку jython (т.к. размер у неё достаточно большой)
                 // это делается для того, чтобы в дальнейшем (во время работы сервера) не зависал сервер
                 if (loadedPyPlugins <= 0) {
-                    PythonInterpreter pythonInterpreter = new PythonInterpreter();
-                    pythonInterpreter.cleanup();
-                    pythonInterpreter.close();
+                    PyPluginManager.emptyLoad();
                 }
             }
         }.runTaskLater(this, 1);
@@ -239,6 +62,7 @@ public class PyPluginMain extends JavaPlugin {
 
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
         if (cmd.getName().equalsIgnoreCase("pyplugins")) {
+
             // Если не ОП - идем мимо
             if (!sender.isOp()) {
                 sender.sendMessage(ChatColor.RED + "Only for OP!");
@@ -247,23 +71,25 @@ public class PyPluginMain extends JavaPlugin {
 
             if (args.length == 0) {
                 // Команда /pyp
-                int cnt = pyPluginInstances.size();
+                int cnt = PyPluginManager.getPyPluginInstances().size();
                 int i = 0;
                 StringBuilder sb = new StringBuilder("PyPlugins (").append(cnt).append("): ");
-                for (PyPluginInstance pluginInstance : pyPluginInstances) {
+                for (PyPluginInstance pluginInstance : PyPluginManager.getPyPluginInstances()) {
                     i++;
                     sb.append(ChatColor.GREEN).append(pluginInstance.getName()).append(ChatColor.RESET);
                     if (i < cnt) sb.append(", ");
                 }
                 sender.sendMessage(sb.toString());
                 return true;
+
             } else if (args.length == 1 && args[0].equalsIgnoreCase("thread-list")) {
                 // Команда /pyp thread-list
                 StringBuilder sb = new StringBuilder("Jython threads:\n");
-                for (Thread thread : getRunningJythonThreads())
+                for (Thread thread : PyPluginThreadManager.getRunningJythonThreads())
                     sb.append(" - ").append(thread.getName()).append('\n');
                 sender.sendMessage(sb.toString());
                 return true;
+
             } else if (args.length < 2) {
                 // Больше нет команд, которые принимают менее двух аргументов
                 return false;
@@ -275,17 +101,20 @@ public class PyPluginMain extends JavaPlugin {
             UniqueLog uniqueLog = new UniqueLog(getLogger(), sender);
             if (actionName.equalsIgnoreCase("reload")) {
                 // Делаем туды-сюды
-                unloadPyPlugin(actionArg, uniqueLog); // Выгрузили (туды)
-                loadPyPlugin(actionArg, uniqueLog); // Загрузили (сюды)
+                PyPluginManager.unloadPyPlugin(actionArg, uniqueLog); // Выгрузили (туды)
+                PyPluginManager.loadPyPlugin(actionArg, uniqueLog); // Загрузили (сюды)
                 return true;
+
             } else if (actionName.equalsIgnoreCase("load")) {
-                loadPyPlugin(actionArg, uniqueLog);
+                PyPluginManager.loadPyPlugin(actionArg, uniqueLog);
                 return true;
+
             } else if (actionName.equalsIgnoreCase("unload")) {
-                unloadPyPlugin(actionArg, uniqueLog);
+                PyPluginManager.unloadPyPlugin(actionArg, uniqueLog);
                 return true;
+
             } else if (actionName.equalsIgnoreCase("thread-stop")) {
-                Thread thread = getThreadByName(actionArg);
+                Thread thread = PyPluginThreadManager.getThreadByName(actionArg);
                 if (thread != null) {
                     thread.interrupt();
                     sender.sendMessage("Thread interrupt.");
@@ -302,8 +131,11 @@ public class PyPluginMain extends JavaPlugin {
     @Override
     public void onDisable() {
         UniqueLog uniqueLog = new UniqueLog(getLogger());
-        while (pyPluginInstances.size() > 0) {
-            unloadPyPlugin(pyPluginInstances.get(0), uniqueLog);
+
+        while (PyPluginManager.getPyPluginInstances().size() > 0) {
+            PyPluginManager.unloadPyPlugin(
+                    PyPluginManager.getPyPluginInstances().get(0),
+                    uniqueLog);
         }
 
         instance = null;

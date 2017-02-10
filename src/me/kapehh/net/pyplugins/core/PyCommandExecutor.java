@@ -1,6 +1,6 @@
 package me.kapehh.net.pyplugins.core;
 
-import me.kapehh.net.pyplugins.PyPluginMain;
+import me.kapehh.net.pyplugins.PyPluginManager;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -14,7 +14,6 @@ public class PyCommandExecutor implements CommandExecutor {
 
     /**
      * Стандартный Bukkit-обработчик команд
-     * @see PyPluginMain#onEnable
      */
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args) {
@@ -27,7 +26,7 @@ public class PyCommandExecutor implements CommandExecutor {
 
         boolean ret = false;
         // Вызываем во всех плагинах событие ввода команды
-        for (PyPluginInstance pluginInstance : PyPluginMain.getPyPluginInstances()) {
+        for (PyPluginInstance pluginInstance : PyPluginManager.getPyPluginInstances()) {
             try {
                 if (pluginInstance.getPyPlugin() != null) {
                     // Передаем PyCommand в плагины (т.е. первый аргумент args[0])
