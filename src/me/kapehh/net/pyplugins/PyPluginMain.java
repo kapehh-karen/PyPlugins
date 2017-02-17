@@ -3,6 +3,7 @@ package me.kapehh.net.pyplugins;
 import me.kapehh.net.pyplugins.core.PyCommandExecutor;
 import me.kapehh.net.pyplugins.core.PyPluginInstance;
 import me.kapehh.net.pyplugins.util.UniqueLog;
+import org.apache.commons.lang3.StringUtils;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -10,6 +11,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 /**
@@ -24,15 +27,19 @@ public class PyPluginMain extends JavaPlugin {
         PyPluginManager.setDataFolder(this.getDataFolder());
 
         // Регистрируем команды
-        getCommand("pyplugins").setExecutor(this);
-        getCommand("pycommand").setExecutor(new PyCommandExecutor());
-
-        Logger log = getLogger();
-        log.info("Start task loading PyPlugins...");
+        this.getCommand("pyplugins").setExecutor(this);
+        this.getCommand("pycommand").setExecutor(new PyCommandExecutor());
 
         // Чекаем PyПлагины
-        if (!getDataFolder().exists())
-            getDataFolder().mkdirs();
+        if (!this.getDataFolder().exists())
+            this.getDataFolder().mkdirs();
+
+        this.saveDefaultConfig();
+        List<String> pluginsForLoad = this.getConfig().getStringList("plugins");
+
+        Logger log = this.getLogger();
+        log.info("Plugins from config: " + StringUtils.join(pluginsForLoad, ", "));
+        log.info("Start task loading PyPlugins...");
 
         // Запускаем Task через 1 тик, чтобы код выполнился после загрузки всех плагинов
         new BukkitRunnable() {
@@ -42,7 +49,8 @@ public class PyPluginMain extends JavaPlugin {
                 int loadedPyPlugins = 0;
 
                 UniqueLog uniqueLog = new UniqueLog(log);
-                for (File file : getDataFolder().listFiles()) {
+                for (String pluginName : pluginsForLoad) {
+                    File file = new File(getDataFolder(), pluginName);
                     if (file.isDirectory()) {
                         // Если плагин был загружен, увеличиваем счетчик
                         if (PyPluginManager.loadPyPlugin(file, uniqueLog))
@@ -131,6 +139,13 @@ public class PyPluginMain extends JavaPlugin {
     @Override
     public void onDisable() {
         UniqueLog uniqueLog = new UniqueLog(getLogger());
+
+        List<String> listOfPluginNames = new ArrayList<>();
+        for (PyPluginInstance pyPlugin : PyPluginManager.getPyPluginInstances()) {
+            listOfPluginNames.add(pyPlugin.getName());
+        }
+        this.getConfig().set("plugins", listOfPluginNames);
+        this.saveConfig();
 
         while (PyPluginManager.getPyPluginInstances().size() > 0) {
             PyPluginManager.unloadPyPlugin(
