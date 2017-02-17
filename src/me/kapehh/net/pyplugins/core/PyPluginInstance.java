@@ -8,12 +8,15 @@ import org.python.util.PythonInterpreter;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
  * Created by karen on 26.09.2016.
  */
 public class PyPluginInstance {
+    private static HashMap<String, PyObject> settings = new HashMap<>();
+
     private PythonInterpreter interpreter;
     private String path;
     private String name;
@@ -49,9 +52,12 @@ public class PyPluginInstance {
 
     public void shutdown() {
         // Удаляем слушатели событий связанные с нашими PyListener'fvb
-        for (PyListener pyListener : this.pyListeners)
+        for (PyListener pyListener : this.pyListeners) {
             HandlerList.unregisterAll(pyListener);
+        }
         this.pyListeners.clear();
+
+        this.removeSetting();
 
         // Очищаем интерпретатор
         this.interpreter.cleanup();
@@ -59,29 +65,45 @@ public class PyPluginInstance {
         this.interpreter = null;
     }
 
+    private void removeSetting() {
+        String lowerName = this.name.toLowerCase();
+        if (PyPluginInstance.settings.containsKey(lowerName)) {
+            PyPluginInstance.settings.remove(lowerName);
+        }
+    }
+
     /**
      * PYPLUGIN PART
      */
 
-    /**
-     * Регистрирует все методы PyListener'а на сервере (каждый метод - отдельное событие)
-     * init.py
-     *
-     * @param listener класс отмеченный декоратором BukkitListener
-     */
+    // Регистрирует все методы PyListener'а на сервере (каждый метод - отдельное событие)
     public void addPyListener(PyObject listener) {
         PyListener pyListener = (PyListener) listener.__tojava__(PyListener.class);
         this.pyListeners.add(pyListener);
     }
 
-    /**
-     * Устанавливает экземпляр PyPlugin'а для данного py-плагина
-     * init.py
-     *
-     * @param pyPlugin класс отмеченный декоратором BukkitPlugin
-     */
+    // Устанавливает экземпляр PyPlugin'а для данного py-плагина
     public void setPyPlugin(PyObject pyPlugin) {
         this.pyPyPlugin = pyPlugin;
         this.pyPlugin = (PyPlugin) pyPlugin.__tojava__(PyPlugin.class);
+    }
+
+    // Сохраняет настройки плагина
+    public void setSetting(PyObject setting) {
+        String lowerName = this.name.toLowerCase();
+        if (PyPluginInstance.settings.containsKey(lowerName)) {
+            PyPluginInstance.settings.remove(lowerName);
+        }
+        PyPluginInstance.settings.put(lowerName, setting);
+    }
+
+    // Получает настройки плагина
+    public PyObject getSetting(String pluginName) {
+        String lowerName = pluginName.toLowerCase();
+        if (PyPluginInstance.settings.containsKey(lowerName)) {
+            return PyPluginInstance.settings.get(lowerName);
+        } else {
+            return null;
+        }
     }
 }

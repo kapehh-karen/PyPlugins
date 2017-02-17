@@ -40,7 +40,8 @@ public class PyListener implements Listener {
 
         // Добавляем EventHandler в список и регистрируем его на сервере
         set.add(pythonHandler);
-        if (PyPluginMain.instance != null)
+        if (PyPluginMain.instance != null) {
             PyPluginMain.instance.getServer().getPluginManager().registerEvent(type, this, priority, pythonHandler, PyPluginMain.instance);
+        }
     }
 }
