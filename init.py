@@ -13,27 +13,25 @@ from java.io import ByteArrayOutputStream
 
 import json
 import binascii
-import os
 
 
 # Settings init.py
 
+class Settings:
+    event_methods = []
+    command_methods = []
+    plugin = None
+    plugin_dir = unicode(__pyplugin__.getPath())
 
-__internal_data__ = {
-    "event_methods": [],
-    "command_methods": [],
-    "pyplugin": None,
-}
 
-
-def get_py_cwd():
-    return unicode(__pyplugin__.getPath())
+class PypException(Exception):
+    pass
 
 
 # Bukkit JSON
 
-
 ITEMSTACK_JSON_NAME = "bukkit::itemstack"
+
 
 class BukkitJSONEncoder(json.JSONEncoder):
     def default(self, obj):
@@ -70,13 +68,12 @@ class BukkitJSON:
 
 # Internal classes
 
-
 class PyListener(JavaPyListener):
     def get_pyplugin(self):
         """
             Return PyPlugin instance
         """
-        return __internal_data__["pyplugin"]
+        return Settings.plugin
 
 
 class PyPlugin(JavaPyPlugin):
@@ -85,70 +82,63 @@ class PyPlugin(JavaPyPlugin):
 
 # Decorators
 
-
-def PyEventHandler(event, priority=EventPriority.NORMAL):
+def pyp_event_handler(event, priority=EventPriority.NORMAL):
     def first_wrapper(method):
         # Check duplicate methods
-        if method.__name__ in __internal_data__["event_methods"]:
-            raise Exception('Event method name "%s" already exists!' % method.__name__)
+        if method.__name__ in Settings.event_methods:
+            raise PypException('Event method name "%s" already exists!' % method.__name__)
         else:
-            __internal_data__["event_methods"].append(method.__name__)
+            Settings.event_methods.append(method.__name__)
 
-        def second_wrapper(*args, **kwargs):
-            method(*args, **kwargs)
-
-        second_wrapper.__PyEventType = event
-        second_wrapper.__PyEventPriority = priority
-        return second_wrapper
+        method._PyEventType = event
+        method._PyEventPriority = priority
+        return method
     return first_wrapper
 
 
-def PyCommandHandler(cmdName):
+def pyp_command_handler(command_name):
     def first_wrapper(method):
         # Check duplicate methods
-        if method.__name__ in __internal_data__["command_methods"]:
-            raise Exception('Command method name "%s" already exists!' % method.__name__)
+        if method.__name__ in Settings.command_methods:
+            raise PypException('Command method name "%s" already exists!' % method.__name__)
         else:
-            __internal_data__["command_methods"].append(method.__name__)
+            Settings.command_methods.append(method.__name__)
 
-        def second_wrapper(*args, **kwargs):
-            method(*args, **kwargs)
-
-        second_wrapper.__PyCommandName = cmdName
-        return second_wrapper
+        method._PyCommandName = command_name
+        return method
     return first_wrapper
 
 
-def BukkitListener(cls):
+def pyp_listener(cls):
     # Check parent class
     if not issubclass(cls, PyListener):
-        raise Exception('%s is not subclass PyListener' % cls)
+        raise PypException('%s is not subclass PyListener' % cls)
 
     listener = cls()
     for nameMethod in dir(listener):
         method = getattr(listener, nameMethod)
-        if hasattr(method, '__PyEventType') and hasattr(method, '__PyEventPriority'):
-            listener.addHandler(method, getattr(method, '__PyEventType'), getattr(method, '__PyEventPriority'))
+        if hasattr(method, '_PyEventType') and hasattr(method, '_PyEventPriority'):
+            listener.addHandler(method, method._PyEventType, method._PyEventPriority)
 
     __pyplugin__.addPyListener(listener)
     return cls
 
 
-def BukkitPlugin(cls):
+def pyp_plugin(cls):
     # Check parent class
     if not issubclass(cls, PyPlugin):
-        raise Exception('%s is not subclass PyPlugin' % cls)
+        raise PypException('%s is not subclass PyPlugin' % cls)
 
     # Only one instance of PyPlugin
-    if __internal_data__["pyplugin"] is not None:
-        raise Exception('PyPlugin already set')
+    if Settings.plugin is not None:
+        raise PypException('PyPlugin already set')
 
     pyplugin = cls()
     for nameMethod in dir(pyplugin):
         method = getattr(pyplugin, nameMethod)
-        if hasattr(method, '__PyCommandName'):
-            pyplugin.addCommand(getattr(method, '__PyCommandName'), method)
+        if hasattr(method, '_PyCommandName'):
+            pyplugin.addCommand(method._PyCommandName, method)
 
-    __internal_data__["pyplugin"] = pyplugin
+    Settings.plugin = pyplugin
     __pyplugin__.setPyPlugin(pyplugin)
     return cls

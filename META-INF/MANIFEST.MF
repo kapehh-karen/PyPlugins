@@ -1,2 +1,2 @@
 Manifest-Version: 1.0
-Class-Path: /C:/Users/karen/Documents/GitHub/PyPlugins/lib/jython-2.7.jar
+Class-Path: ../lib/jython-2.7.jar
