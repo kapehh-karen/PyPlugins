@@ -112,6 +112,24 @@ class Plug(PyPlugin):
 * <code>/pyp thread-stop **threadName**</code> - завершает поток по его имени
 * <code>/pyc **commandName**</code> - выполняет команду **commandName**
 
+# Дополнительные примеры
+
+## Запрос к БД
+```python
+from com.ziclix.python.sql import zxJDBC
+
+jdbc_url = r"jdbc:mysql://xx.xx.xx.xx/BDNAME"
+username = "BDLOGIN"
+password = "BDPASSWORD"
+driver = "com.mysql.jdbc.Driver"
+
+# obtain a connection using the with-statment
+with zxJDBC.connect(jdbc_url, username, password, driver) as conn:
+    with conn.cursor() as c:
+        c.execute("select * from table_name limit 1")
+        print(c.fetchall())
+```
+
 # Известные баги и рекомендации
 
 * Подключение python модулей лучше делать после подключения Java классов. Например:
