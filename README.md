@@ -67,7 +67,7 @@ from org.bukkit.event.player import PlayerJoinEvent
 from org.bukkit.event.player import PlayerQuitEvent
 
 @pyp_listener
-class Listnr(PyListener):
+class MyListener(PyListener):
 
     @pyp_event_handler(PlayerJoinEvent)
     def join(self, event):
@@ -81,7 +81,7 @@ class Listnr(PyListener):
 
 
 @pyp_plugin
-class Plug(PyPlugin):
+class MyPlugin(PyPlugin):
 
     @pyp_command_handler("iteminfo")
     def onItemInfo(self, sender, args):
