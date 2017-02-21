@@ -112,9 +112,16 @@ class MyPlugin(PyPlugin):
 * <code>/pyp thread-stop **threadName**</code> - завершает поток по его имени
 * <code>/pyc **commandName**</code> - выполняет команду **commandName**
 
+# Настройки плагинов
+
+* Рабочая директория всех python-плагинов: `./plugins/PyPlugins`
+* Для получения пути к текущей папке плагина, нужно взять значения из настроек: `Settings.plugin_dir`
+* Для получения объекта PyPlugin плагина в файле `main.py`, взять значение из `Settings.plugin`
+* Для получения настроек __другого плагина__, необходимо вызывать метод <code>Settings.get_other_settings("PyPluginName")</code> который вернет объект `Settings` другого плагина. Так можно передавать информацию с одного python-плагина в другой.
+
 # Дополнительные примеры
 
-## Запрос к БД
+Запрос к БД
 ```python
 from com.ziclix.python.sql import zxJDBC
 
