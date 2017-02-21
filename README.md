@@ -1,10 +1,6 @@
 # PyPlugins v4
 Bukkit плагин, позволяющий расширять функционал Bukkit-серверов (CraftBukkit, Spigot и т.п.) с использованием Jython (интерпретатор Python версии 2.7)
 
-# Дополнительная информация
-* <a href="//github.com/kapehh-karen/PyPlugins-Libs">PyPlugins-Libs - Официальные модули для PyPlugins</a>
-* <a href="//github.com/kapehh-karen/PyPlugins-Plugins">PyPlugins-Plugins - Официальные примеры плагинов для PyPlugins</a>
-
 # Установка
 1. Поместить плагин <code>PyPlugins.jar</code> в директорию <code>plugins/</code> которая находится в той же директории где и сервер
 2. Создать (если нету) в директории сервера папку <code>lib/</code> и поместить туда файл <code>jython.jar</code>
@@ -138,3 +134,7 @@ import re
 ```
 
 * Иногда, когда сервер работает постоянно 24/7, в JVM может что-то отвалиться и при попытке перезагрузке python скрипта командой <code>pyp reload</code> ваш плагин успешно выгрузится, но обратно *не загрузится*. Начнет ругаться на ошибку связанную с GZIP. Если требуется перезагрузить плагин после длительной работы сервера, советую создать плагин-пустышку, например Test в котором ничего не будет. Затем попробуйте загрузить этот пустой плагин Test командой <code>pyp load Test</code>, если он загрузится успешно, тогда смело перезагружайте свой рабочий плагин.
+
+# Дополнительная информация
+* <a href="//github.com/kapehh-karen/PyPlugins-Libs">PyPlugins-Libs - Официальные модули для PyPlugins</a>
+* <a href="//github.com/kapehh-karen/PyPlugins-Plugins">PyPlugins-Plugins - Официальные примеры плагинов для PyPlugins</a>
