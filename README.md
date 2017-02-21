@@ -3,7 +3,7 @@ Bukkit плагин, позволяющий расширять функцион�
 
 # Дополнительная информация
 * <a href="//github.com/kapehh-karen/PyPlugins-Libs">PyPlugins-Libs - Официальные модули для PyPlugins</a>
-* <a href="//github.com/kapehh-karen/PyPlugins-Plugins">PyPlugins-Libs - Официальные примеры плагинов для PyPlugins</a>
+* <a href="//github.com/kapehh-karen/PyPlugins-Plugins">PyPlugins-Plugins - Официальные примеры плагинов для PyPlugins</a>
 
 # Установка
 1. Поместить плагин <code>PyPlugins.jar</code> в директорию <code>plugins/</code> которая находится в той же директории где и сервер
